@@ -1,3 +1,6 @@
+#Written by othermod
+#www.othermod.com
+
 #Enable needed hardware interfaces
 dtparam=i2c_arm=on
 dtparam=i2c_vc=on
