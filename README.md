@@ -4,7 +4,7 @@
 
 [othermod.com](https://othermod.com/product/raspberry-pi-analog-input-module/)
 
-[guide] (https://othermod.com/analog-joystick-on-retropie/)
+[guide](https://othermod.com/analog-joystick-on-retropie/)
 
 Add 4 12-bit Analog Inputs to your Raspberry Pi using the Pi’s I2C but. Perfect for adding a joystick or battery monitoring.
 
