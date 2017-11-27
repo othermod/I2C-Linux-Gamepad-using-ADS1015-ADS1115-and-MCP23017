@@ -65,7 +65,7 @@ while True:
 	else:
 		#Center the sticks if within deadzone
 		device.emit(uinput.ABS_X, VREF/2)
-	if (an2 > (VREF/2 + DZONE)) or (an1 < (VREF/2 - DZONE)):
+	if (an1 > (VREF/2 + DZONE)) or (an1 < (VREF/2 - DZONE)):
 		device.emit(uinput.ABS_Y, an1 + 100 - 200 * (an1 < VREF/2 - DZONE) + 200 * (an1 > VREF/2 + DZONE))
 	else:
 		#Center the sticks if within deadzone
