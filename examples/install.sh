@@ -1,6 +1,6 @@
 #!/bin/bash
 #Written by othermod
-#www.othermod.com
+#https://www.othermod.com
 
 if [ $(id -u) -ne 0 ]; then
 	echo "Installer must be run as root."

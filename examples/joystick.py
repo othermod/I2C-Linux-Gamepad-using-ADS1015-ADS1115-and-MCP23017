@@ -1,5 +1,5 @@
 #Written by othermod
-#www.othermod.com
+#https://www.othermod.com
 import uinput, time, math
 import RPi.GPIO as GPIO
 #!/usr/bin/python
