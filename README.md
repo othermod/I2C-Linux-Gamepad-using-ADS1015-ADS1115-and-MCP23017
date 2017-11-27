@@ -6,6 +6,4 @@
 
 [guide](https://othermod.com/analog-joystick-on-retropie/)
 
-Add 4 12-bit Analog Inputs to your Raspberry Pi using the Pi’s I2C bus. Perfect for adding a joystick or battery monitoring.
-
-This uses the I2C interface, which must first be enabled using raspi-config.
+Add 4 12-bit Analog Inputs to your Raspberry Pi using the Pi’s I2C-0 bus. Perfect for adding a joystick or battery monitoring. Battery monitoring code will come soon.
