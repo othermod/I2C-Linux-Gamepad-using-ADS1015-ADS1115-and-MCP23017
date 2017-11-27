@@ -1,9 +1,10 @@
 #Enable needed hardware interfaces
 dtparam=i2c_arm=on
 dtparam=i2c_vc=on
+dtparam=i2c1=on
 
 #Enable I2C on the CSI pins of Raspberry Pi Zero 1.3 and Zero W.
-#dtoverlay=i2c0-bcm2708,pins_28_29
+dtoverlay=i2c0-bcm2708,pins_28_29
 
 #Enable I2C on the CSI pins of Raspberry Pi 3.
 #dtoverlay=i2c0-bcm2708,pins_44_45
