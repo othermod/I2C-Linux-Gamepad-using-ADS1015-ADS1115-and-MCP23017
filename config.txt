@@ -12,4 +12,4 @@ dtparam=i2c1=on
 #Enable I2C on the CSI pins of Raspberry Pi 3.
 #dtoverlay=i2c0-bcm2708,pins_44_45
 
-dtoverlay=ads1015m
+dtoverlay=ads1015-5v
