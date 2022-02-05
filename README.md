@@ -1,4 +1,4 @@
-# Raspberry Pi Analog Expander
+# Analog Joystick on Raspberry Pi
 
 February 5, 2022 - Driver is getting a rewrite to move from using Python to using C.
 
