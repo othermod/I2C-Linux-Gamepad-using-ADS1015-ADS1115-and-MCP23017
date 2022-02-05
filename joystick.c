@@ -111,13 +111,13 @@ int createUInputDevice() {
   // axis
   ioctl(fd, UI_SET_EVBIT, EV_ABS);
   ioctl(fd, UI_SET_ABSBIT, ABS_X);
-  uidev.absmin[ABS_X] = 0; //center position is 127, minimum is near 50
-  uidev.absmax[ABS_X] = 3300; //center position is 127, maximum is near 200
+  uidev.absmin[ABS_X] = 0; //center position is 1650, minimum is near 0
+  uidev.absmax[ABS_X] = 3300; //center position is 1650, maximum is near 3300
   uidev.absflat[ABS_X] = 50; //this appears to be the deadzone
   //uidev.absfuzz[ABS_X] = 0; //what does this do?
   ioctl(fd, UI_SET_ABSBIT, ABS_Y);
-  uidev.absmin[ABS_Y] = 0; //center position is 127, minimum is near 50
-  uidev.absmax[ABS_Y] = 3300; //center position is 127, maximum is near 200
+  uidev.absmin[ABS_Y] = 0; //center position is 1650, minimum is near 0
+  uidev.absmax[ABS_Y] = 3300; //center position is 1650, maximum is near 3300
   uidev.absflat[ABS_Y] = 50; //this appears to be the deadzone
   //uidev.absfuzz[ABS_Y] = 0; //what does this do?
   snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "PSPi Controller");
