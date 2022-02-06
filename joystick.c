@@ -45,17 +45,19 @@ int verbose = 0;
 #define ADS1015_CONVERT_REGISTER 0
 #define ADS1015_CONFIG_REGISTER 1
 
+#define I2C_BUS "/dev/i2c-1"
+#define I2C_ADDRESS 0x48
+
 int ads1015_open() {
   // open the i2c device
   int file;
-  const int ADC_Address = 0x48; //0x48 is the i2c address
-  char * filename = "/dev/i2c-1"; //specify which I2C bus to use
+  char * filename = I2C_BUS; //specify which I2C bus to use
   if ((file = open(filename, O_RDWR)) < 0) {
     perror("Failed to open the i2c bus");
     exit(1);
   }
   // initialize the device
-  if (ioctl(file, I2C_SLAVE, ADC_Address) < 0) //0x48 is the i2c address
+  if (ioctl(file, I2C_SLAVE, I2C_ADDRESS) < 0)
   {
     printf("Failed to acquire bus access and/or talk to slave.\n");
     exit(1);
@@ -70,22 +72,37 @@ void ads1015SetConfig(int I2C, int input) { //only needs to be done when changin
   if (verbose == 1) printf("Setting Configs. writeBuffer[2] : %#x\n", writeBuffer[2]);
   writeBuffer[0] = ADS1015_CONFIG_REGISTER;
   writeBuffer[1] = ADS1015_OS_ON + analogInput[input] + ADS1015_INPUT_GAIN + ADS1015_MODE;
-  write(I2C, writeBuffer, 3);
+  if (write(I2C, writeBuffer, 3) != 3) {
+    printf("Unable to write to ADS1015 config register.\n");
+    sleep(1);
+  }
   writeBuffer[0] = ADS1015_CONVERT_REGISTER; // indicate that we are ready to read the conversion register
-  write(I2C, writeBuffer, 1);
+  if (write(I2C, writeBuffer, 1) != 1) {
+    printf("Unable to write to ADS1015 conversion register.\n");
+    sleep(1);
+  }
 }
 
 void ads1015WriteConfig(int I2C, int input) {
   // set the pointer to the config register
   writeBuffer[0] = ADS1015_CONFIG_REGISTER;
   writeBuffer[1] = ADS1015_OS_ON + analogInput[input] + ADS1015_INPUT_GAIN + ADS1015_MODE;
-  write(I2C, writeBuffer, 3);
+  if (write(I2C, writeBuffer, 3) != 3) {
+    printf("Unable to write to ADS1015 config register.\n");
+    sleep(1);
+  }
   writeBuffer[0] = ADS1015_CONVERT_REGISTER; // indicate that we are ready to read the conversion register
-  write(I2C, writeBuffer, 1);
+  if (write(I2C, writeBuffer, 1) != 1) {
+    printf("Unable to write to ADS1015 conversion register.\n");
+    sleep(1);
+  }
 }
 
 void readADC(int I2C, int input) {
-  read(I2C, readBuffer, 2); // read the conversion. we waited long enough for the reading to be ready, so we arent checking the conversion register
+    if (read(I2C, readBuffer, 2) != 2) { // read the conversion. we waited long enough for the reading to be ready, so we arent checking the conversion register
+      printf("Unable to read ADS1015.\n");
+      sleep(1);
+    }
   //int val = readBuffer[0] << 8 | readBuffer[1];
   ADCstore[input] = ((readBuffer[0] << 8) | ((readBuffer[1] & 0xff)));
   ADCstore[input] = (ADCstore[input] >> 4) * 3; //bitshift to the right 4 places (see datasheet for reason, and multiply by 3 to get actual voltage)
@@ -97,7 +114,7 @@ int createUInputDevice() {
   int fd;
   fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
   if (fd < 0) {
-    fprintf(stderr, "Can't open uinput device!\n");
+    fprintf(stderr, "Can't open uinput device! Run the program as sudo.\n");
     exit(1);
   }
   // device structure
@@ -120,7 +137,7 @@ int createUInputDevice() {
   uidev.absmax[ABS_Y] = 3300; //center position is 1650, maximum is near 3300
   uidev.absflat[ABS_Y] = 50; //this appears to be the deadzone
   //uidev.absfuzz[ABS_Y] = 0; //what does this do?
-  snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "PSPi Controller");
+  snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "othermod Joystick");
   uidev.id.bustype = BUS_USB;
   uidev.id.vendor = 1;
   uidev.id.product = 5;
