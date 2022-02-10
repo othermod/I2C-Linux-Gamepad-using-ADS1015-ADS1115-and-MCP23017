@@ -23,7 +23,7 @@ uint8_t ADS1015writeBuffer[3];
 uint8_t MCP23017readBuffer[2];
 uint8_t MCP23017writeBuffer[2];
 uint16_t previousReadBuffer;
-uint16_t ADCstore[4] = {127, 127, 127, 127};
+uint16_t ADCstore[4] = {1650, 1650, 1650, 1650};
 int verbose = 0;
 //this was done on every loop, which isnt needed
 #define MCP_ADDRESS 0x20 // MCP23017
