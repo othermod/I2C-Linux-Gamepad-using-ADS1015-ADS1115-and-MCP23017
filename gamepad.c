@@ -34,7 +34,9 @@ uint16_t ADCstore[4] = {
   1650,
   1650
 };
-int verbose = 0;
+
+bool verbose = 0;
+bool rightJoystickEnabled = 0;
 
 // specify addresses for expanders
 #define MCP_ADDRESS 0x20 // MCP23017
@@ -201,16 +203,32 @@ int createUInputDevice() {
 
   // axis
   ioctl(fd, UI_SET_EVBIT, EV_ABS);
+  // left joystick
   ioctl(fd, UI_SET_ABSBIT, ABS_X);
-  uidev.absmin[ABS_X] = 0; //center position is 127, minimum is near 50
-  uidev.absmax[ABS_X] = 3300; //center position is 127, maximum is near 200
-  uidev.absflat[ABS_X] = 50; //this appears to be the deadzone
-  //uidev.absfuzz[ABS_X] = 0; //what does this do?
+  uidev.absmin[ABS_X] = 0; // center position is 1650
+  uidev.absmax[ABS_X] = 3300; // center position is 1650
+  uidev.absflat[ABS_X] = 75; // deadzone
+  //uidev.absfuzz[ABS_X] = 0; // what does this do?
   ioctl(fd, UI_SET_ABSBIT, ABS_Y);
-  uidev.absmin[ABS_Y] = 0; //center position is 127, minimum is near 50
-  uidev.absmax[ABS_Y] = 3300; //center position is 127, maximum is near 200
-  uidev.absflat[ABS_Y] = 50; //this appears to be the deadzone
-  //uidev.absfuzz[ABS_Y] = 0; //what does this do?
+  uidev.absmin[ABS_Y] = 0; // center position is 1650
+  uidev.absmax[ABS_Y] = 3300; // center position is 1650
+  uidev.absflat[ABS_Y] = 75; // deadzone
+  //uidev.absfuzz[ABS_Y] = 0; // what does this do?
+
+ if (rightJoystickEnabled) {
+  // right joystick
+  ioctl(fd, UI_SET_ABSBIT, ABS_RX);
+  uidev.absmin[ABS_RX] = 0; // center position is 1650
+  uidev.absmax[ABS_RX] = 3300; // center position is 1650
+  uidev.absflat[ABS_RX] = 75; // deadzone
+  //uidev.absfuzz[ABS_RX] = 0; // what does this do?
+  ioctl(fd, UI_SET_ABSBIT, ABS_RY);
+  uidev.absmin[ABS_RY] = 0; // center position is 1650
+  uidev.absmax[ABS_RY] = 3300; // center position is 1650
+  uidev.absflat[ABS_RY] = 75; // deadzone
+  //uidev.absfuzz[ABS_Y] = 0; // what does this do?
+}
+
   snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "othermod Gamepad");
   uidev.id.bustype = BUS_USB;
   uidev.id.vendor = 1;
@@ -259,6 +277,11 @@ void updateJoystick(int virtualGamepad) {
   // update joystick
   emit(virtualGamepad, EV_ABS, ABS_X, ADCstore[0]);
   emit(virtualGamepad, EV_ABS, ABS_Y, ADCstore[1]);
+  if (rightJoystickEnabled) {
+    emit(virtualGamepad, EV_ABS, ABS_RX, ADCstore[2]);
+    emit(virtualGamepad, EV_ABS, ABS_RY, ADCstore[3]);
+  }
+
 }
 
 int main(void) {
@@ -266,6 +289,12 @@ int main(void) {
   int mcpFile = MCP23017open(); // open Expander device
   //set initial ADC condition
   int ADC = 0;
+  int maxADC;
+  if (rightJoystickEnabled) {
+    maxADC = 3;
+  } else {
+    maxADC = 1;
+  }
   ADS1015writeConfig(adcFile, ADC);
   ADS1015setInput(adcFile, ADC);
   MCP23017writeConfig(mcpFile);
@@ -274,20 +303,29 @@ int main(void) {
   MCP23017read(mcpFile);
   uint16_t tempReadBuffer = 0x00;
   updateButtons(virtualGamepad, tempReadBuffer);
+  bool reportUinput = 0;
   while (1) {
     ADS1015readInput(adcFile, ADC); //read the ADC
-    ADC = !ADC; //swap between ADC 0 and 1
+    ADC++;
+    if (ADC > maxADC) {
+      updateJoystick(virtualGamepad); // update the joystick after all analog inputs have been read
+      reportUinput = 1;
+      ADC = 0;
+    }
     ADS1015setInput(adcFile, ADC); //set configuration for ADS1015 for next loop
     MCP23017read(mcpFile); //read the expander
     tempReadBuffer = (MCP23017readBuffer[0] << 8) | (MCP23017readBuffer[1] & 0xff);
     if (tempReadBuffer != previousReadBuffer) {
       updateButtons(virtualGamepad, tempReadBuffer);
+      reportUinput = 1;
     } //only update the buttons when something changes from the last loop
     previousReadBuffer = tempReadBuffer;
-    //    if (ADC) {
-    updateJoystick(virtualGamepad); // update the joystick on every other loop
-    //    }
-    emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
+
+        if (reportUinput) {
+          emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
+          reportUinput = 0;
+        }
+
     usleep(16666); // sleep for about 1/60th of a second. Also gives the ADC enough time to prepare the next reading
   }
   return 0;
