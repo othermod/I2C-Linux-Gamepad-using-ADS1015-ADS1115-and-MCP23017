@@ -43,9 +43,6 @@ else
 fi
 
 do_service() {
-echo "Disabling and removing existing gamepad service"
-systemctl stop gamepad
-systemctl disable gamepad
 echo "Copying new driver and service files"
 cp -f gamepad /usr/bin/gamepad
 cp -f gamepad.service /etc/systemd/system/gamepad.service
@@ -57,6 +54,9 @@ systemctl enable gamepad
 echo "Compiling the joystick driver"
 make clean
 make
+echo "Disabling and removing existing gamepad service"
+systemctl stop gamepad
+systemctl disable gamepad
 echo "Do you want the driver to load at startup (Enter 1 for Yes or 2 for No)?"
 select yn in "Yes" "No"; do
     case $yn in
@@ -64,3 +64,5 @@ select yn in "Yes" "No"; do
         No ) break;
     esac
 done
+
+echo "You must reboot to finish the installation"
