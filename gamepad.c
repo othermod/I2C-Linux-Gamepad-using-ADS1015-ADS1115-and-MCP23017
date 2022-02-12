@@ -136,12 +136,11 @@ int ADS1015open() {
 void ADS1015writeConfig(int I2C, int input) { //only needs to be done once
   ADS1015writeBuffer[0] = ADS1015_CONFIG_REGISTER;
   ADS1015writeBuffer[1] = ADS1015_OS_ON + analogInput[input] + ADS1015_INPUT_GAIN + ADS1015_MODE;
-  ADS1015writeBuffer[2] = DR128 + ADS1015_COMPARATOR_MODE + ADS1015_COMPARATOR_POLARITY + ADS1015_COMPARATOR_LATCH + ADS1015_COMPARATOR_QUEUE;
+  ADS1015writeBuffer[2] = DR490 + ADS1015_COMPARATOR_MODE + ADS1015_COMPARATOR_POLARITY + ADS1015_COMPARATOR_LATCH + ADS1015_COMPARATOR_QUEUE;
   if (write(I2C, ADS1015writeBuffer, 3) != 3) {
     printf("Failed to write ADS1015 Config\n");
     exit(1);
   }
-
 }
 
 void ADS1015setInput(int I2C, int input) { // has to be done every time we read a different input
@@ -154,7 +153,6 @@ void ADS1015setInput(int I2C, int input) { // has to be done every time we read 
 }
 
 void ADS1015readInput(int I2C, int input) {
-
   read(I2C, ADS1015readBuffer, 2); // read the conversion. we waited long enough for the reading to be ready, so we arent checking the conversion register
   ADCstore[input] = (((ADS1015readBuffer[0] << 8) | ((ADS1015readBuffer[1] & 0xff))) >> 4) * 3;
 }
@@ -268,7 +266,7 @@ int main(void) {
   updateButtons(virtualGamepad, tempReadBuffer);
   while (1) {
 		ADS1015readInput(adcFile, ADC); //read the ADC
-    ADC = !ADC;
+    ADC = !ADC; //swap between ADC 0 and 1
 		ADS1015setInput(adcFile, ADC); //set configuration for ADS1015 for next loop
     MCP23017read(mcpFile); //read the expander
     tempReadBuffer = (MCP23017readBuffer[0] << 8) | (MCP23017readBuffer[1] & 0xff);
