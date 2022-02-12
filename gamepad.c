@@ -215,19 +215,19 @@ int createUInputDevice() {
   uidev.absflat[ABS_Y] = 75; // deadzone
   //uidev.absfuzz[ABS_Y] = 0; // what does this do?
 
- if (rightJoystickEnabled) {
-  // right joystick
-  ioctl(fd, UI_SET_ABSBIT, ABS_RX);
-  uidev.absmin[ABS_RX] = 0; // center position is 1650
-  uidev.absmax[ABS_RX] = 3300; // center position is 1650
-  uidev.absflat[ABS_RX] = 75; // deadzone
-  //uidev.absfuzz[ABS_RX] = 0; // what does this do?
-  ioctl(fd, UI_SET_ABSBIT, ABS_RY);
-  uidev.absmin[ABS_RY] = 0; // center position is 1650
-  uidev.absmax[ABS_RY] = 3300; // center position is 1650
-  uidev.absflat[ABS_RY] = 75; // deadzone
-  //uidev.absfuzz[ABS_Y] = 0; // what does this do?
-}
+  if (rightJoystickEnabled) {
+    // right joystick
+    ioctl(fd, UI_SET_ABSBIT, ABS_RX);
+    uidev.absmin[ABS_RX] = 0; // center position is 1650
+    uidev.absmax[ABS_RX] = 3300; // center position is 1650
+    uidev.absflat[ABS_RX] = 75; // deadzone
+    //uidev.absfuzz[ABS_RX] = 0; // what does this do?
+    ioctl(fd, UI_SET_ABSBIT, ABS_RY);
+    uidev.absmin[ABS_RY] = 0; // center position is 1650
+    uidev.absmax[ABS_RY] = 3300; // center position is 1650
+    uidev.absflat[ABS_RY] = 75; // deadzone
+    //uidev.absfuzz[ABS_Y] = 0; // what does this do?
+  }
 
   snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "othermod Gamepad");
   uidev.id.bustype = BUS_USB;
@@ -321,10 +321,10 @@ int main(void) {
     } //only update the buttons when something changes from the last loop
     previousReadBuffer = tempReadBuffer;
 
-        if (reportUinput) {
-          emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
-          reportUinput = 0;
-        }
+    if (reportUinput) {
+      emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
+      reportUinput = 0;
+    }
 
     usleep(16666); // sleep for about 1/60th of a second. Also gives the ADC enough time to prepare the next reading
   }
