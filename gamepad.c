@@ -25,13 +25,14 @@ uint8_t MCP23017writeBuffer[2];
 uint16_t previousReadBuffer;
 uint16_t ADCstore[4] = {1650, 1650, 1650, 1650};
 int verbose = 0;
-//this was done on every loop, which isnt needed
+
+// specify addresses for expanders
 #define MCP_ADDRESS 0x20 // MCP23017
 #define ADC_ADDRESS 0x48 // ADS1015
 
 #define I2C_BUS "/dev/i2c-1" //specify which I2C bus to use
 
-// stuff for the expander
+// stuff for the GPIO expander
 #define MCP23017_IODIRA 0x00
 #define MCP23017_IPOLA 0x02
 #define MCP23017_GPINTENA 0x04
