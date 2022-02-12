@@ -13,7 +13,12 @@
 #include <linux/uinput.h>
 #include <stdbool.h>
 
-const int analogInput[] = {0x40, 0x50, 0x60, 0x70}; // Analog Selection for 0/1/2/3
+const int analogInput[] = {
+  0x40,
+  0x50,
+  0x60,
+  0x70
+}; // Analog Selection for 0/1/2/3
 
 uint8_t readBuffer[2];
 uint8_t writeBuffer[3];
@@ -23,7 +28,12 @@ uint8_t ADS1015writeBuffer[3];
 uint8_t MCP23017readBuffer[2];
 uint8_t MCP23017writeBuffer[2];
 uint16_t previousReadBuffer;
-uint16_t ADCstore[4] = {1650, 1650, 1650, 1650};
+uint16_t ADCstore[4] = {
+  1650,
+  1650,
+  1650,
+  1650
+};
 int verbose = 0;
 
 // specify addresses for expanders
@@ -243,7 +253,6 @@ void updateButtons(int virtualGamepad, int buttons) {
   emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY14, !((buttons >> 0x0D) & 1));
   emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY15, !((buttons >> 0x0E) & 1));
   emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY16, !((buttons >> 0x0F) & 1));
-  emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
 }
 
 void updateJoystick(int virtualGamepad) {
@@ -266,18 +275,19 @@ int main(void) {
   uint16_t tempReadBuffer = 0x00;
   updateButtons(virtualGamepad, tempReadBuffer);
   while (1) {
-		ADS1015readInput(adcFile, ADC); //read the ADC
+    ADS1015readInput(adcFile, ADC); //read the ADC
     ADC = !ADC; //swap between ADC 0 and 1
-		ADS1015setInput(adcFile, ADC); //set configuration for ADS1015 for next loop
+    ADS1015setInput(adcFile, ADC); //set configuration for ADS1015 for next loop
     MCP23017read(mcpFile); //read the expander
     tempReadBuffer = (MCP23017readBuffer[0] << 8) | (MCP23017readBuffer[1] & 0xff);
     if (tempReadBuffer != previousReadBuffer) {
-		    updateButtons(virtualGamepad, tempReadBuffer);
-      } //only update the buttons when something changes from the last loop
+      updateButtons(virtualGamepad, tempReadBuffer);
+    } //only update the buttons when something changes from the last loop
     previousReadBuffer = tempReadBuffer;
-    if (ADC) {
-      updateJoystick(virtualGamepad); // update the joystick on every other loop
-    }
+    //    if (ADC) {
+    updateJoystick(virtualGamepad); // update the joystick on every other loop
+    //    }
+    emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
     usleep(16666); // sleep for about 1/60th of a second. Also gives the ADC enough time to prepare the next reading
   }
   return 0;
