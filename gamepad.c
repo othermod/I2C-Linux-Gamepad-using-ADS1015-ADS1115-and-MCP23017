@@ -35,12 +35,11 @@ uint16_t ADCstore[4] = {
   1650
 };
 
-bool verbose = 0;
 bool rightJoystickEnabled = 0;
 
 // specify addresses for expanders
-#define MCP_ADDRESS 0x20 // MCP23017
-#define ADC_ADDRESS 0x48 // ADS1015
+#define MCP23017_ADDRESS 0x20
+#define ADS1015_ADDRESS 0x48
 
 #define I2C_BUS "/dev/i2c-1" //specify which I2C bus to use
 
@@ -94,11 +93,11 @@ int MCP23017open() {
   int file;
   char * filename = I2C_BUS; //specify which I2C bus to use
   if ((file = open(filename, O_RDWR)) < 0) {
-    printf("Failed to open I2C bus %s\n", I2C_BUS);
+    printf("Failed to open I2C bus %s. Enable it using sudo raspi-config.\n", I2C_BUS);
     exit(1);
   }
   // initialize the device
-  if (ioctl(file, I2C_SLAVE, MCP_ADDRESS) < 0) {
+  if (ioctl(file, I2C_SLAVE, MCP23017_ADDRESS) < 0) {
     printf("Failed to acquire bus access and/or talk to slave.\n");
     exit(1);
   }
@@ -119,15 +118,18 @@ void MCP23017writeConfig(int I2C) {
   MCP23017writeBuffer[0] = MCP23017_GPPUB; // GPIO Pullup Register
   MCP23017writeBuffer[1] = 0xFF; // Enable Pullup on GPIO B
   if (write(I2C, MCP23017writeBuffer, 2) != 2) {
-    printf("Failed to write MCP23017 Config\n");
-    exit(1);
+    printf("MCP23017 was not detected at address 0x%X. Buttons will not function.\n", MCP23017_ADDRESS);
   }
 }
 
 void MCP23017read(int I2C) {
   MCP23017writeBuffer[0] = MCP23017_GPIOA;
   write(I2C, MCP23017writeBuffer, 1); // prepare to read ports A and B
-  read(I2C, MCP23017readBuffer, 2); //reading two bytes causes it to autoincrement to the next byte, so it reads port B
+  //reading two bytes causes it to autoincrement to the next byte, so it reads port B
+  if (read(I2C, MCP23017readBuffer, 2) != 2) {
+    MCP23017readBuffer[0] = 0xFF;
+    MCP23017readBuffer[1] = 0xFF;
+  }
 }
 
 int ADS1015open() {
@@ -135,11 +137,11 @@ int ADS1015open() {
   int file;
   char * filename = I2C_BUS; //specify which I2C bus to use
   if ((file = open(filename, O_RDWR)) < 0) {
-    printf("Failed to open I2C bus %s\n", I2C_BUS);
+    printf("Failed to open I2C bus %s. Enable it using sudo raspi-config.\n", I2C_BUS);
     exit(1);
   }
   // initialize the device
-  if (ioctl(file, I2C_SLAVE, ADC_ADDRESS) < 0) {
+  if (ioctl(file, I2C_SLAVE, ADS1015_ADDRESS) < 0) {
     printf("Failed to acquire bus access and/or talk to slave.\n");
     exit(1);
   }
@@ -151,8 +153,7 @@ void ADS1015writeConfig(int I2C, int input) { //only needs to be done once
   ADS1015writeBuffer[1] = ADS1015_OS_ON + analogInput[input] + ADS1015_INPUT_GAIN + ADS1015_MODE;
   ADS1015writeBuffer[2] = DR490 + ADS1015_COMPARATOR_MODE + ADS1015_COMPARATOR_POLARITY + ADS1015_COMPARATOR_LATCH + ADS1015_COMPARATOR_QUEUE;
   if (write(I2C, ADS1015writeBuffer, 3) != 3) {
-    printf("Failed to write ADS1015 Config\n");
-    exit(1);
+    printf("ADS1015 was not detected at address 0x%X. Joystick will not function.\n", ADS1015_ADDRESS);
   }
 }
 
@@ -166,15 +167,21 @@ void ADS1015setInput(int I2C, int input) { // has to be done every time we read 
 }
 
 void ADS1015readInput(int I2C, int input) {
-  read(I2C, ADS1015readBuffer, 2); // read the conversion. we waited long enough for the reading to be ready, so we arent checking the conversion register
-  ADCstore[input] = (((ADS1015readBuffer[0] << 8) | ((ADS1015readBuffer[1] & 0xff))) >> 4) * 3;
+  // read the conversion. we waited long enough for the reading to be ready, so we arent checking the conversion register
+  if (read(I2C, ADS1015readBuffer, 2) != 2) {
+    // if no data was received, center the joystick
+    ADCstore[input] = 1650;
+  } else {
+    ADCstore[input] = (((ADS1015readBuffer[0] << 8) | ((ADS1015readBuffer[1] & 0xff))) >> 4) * 3;
+  }
+
 }
 
 int createUInputDevice() {
   int fd;
   fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
   if (fd < 0) {
-    fprintf(stderr, "Can't open uinput device. Try running as sudo.\n");
+    fprintf(stderr, "Unable to create gamepad with uinput. Try running as sudo.\n");
     exit(1);
   }
   // device structure
@@ -285,6 +292,7 @@ void updateJoystick(int virtualGamepad) {
 }
 
 int main(void) {
+  int virtualGamepad = createUInputDevice(); // create uinput device
   int adcFile = ADS1015open(); // open ADC I2C device
   int mcpFile = MCP23017open(); // open Expander device
   //set initial ADC condition
@@ -298,7 +306,6 @@ int main(void) {
   ADS1015writeConfig(adcFile, ADC);
   ADS1015setInput(adcFile, ADC);
   MCP23017writeConfig(mcpFile);
-  int virtualGamepad = createUInputDevice(); // create uinput device
   //set initial button condition
   MCP23017read(mcpFile);
   uint16_t tempReadBuffer = 0x00;
