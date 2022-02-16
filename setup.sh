@@ -31,15 +31,12 @@ do_i2c() {
 
 do_i2c
 
-echo "Checking status in config.txt"
-grep '#dtparam=i2c_arm' /boot/config.txt >/dev/null
+echo "Enabling I2C-1 in config.txt"
+grep 'dtparam=i2c_arm' /boot/config.txt >/dev/null
 if [ $? -eq 0 ]; then
-  echo "Enabling I2C_ARM in config.txt"
-	sudo sed -i 's/#dtparam=i2c_arm/dtparam=i2c_arm/' /boot/config.txt
-
+	sudo sed -i '/dtparam=i2c_arm/c\dtparam=i2c_arm' /boot/config.txt
 else
-  echo "I2C_ARM already enabled in config.txt"
-  sleep 1
+	echo "dtparam=i2c_arm=on" >> /boot/config.txt
 fi
 
 do_service() {
@@ -49,7 +46,6 @@ cp -f gamepad.service /etc/systemd/system/gamepad.service
 echo "Enabling gamepad service"
 systemctl enable gamepad
 }
-
 
 echo "Compiling the joystick driver"
 make clean
