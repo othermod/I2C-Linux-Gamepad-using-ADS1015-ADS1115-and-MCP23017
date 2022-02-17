@@ -31,7 +31,6 @@ do_i2c() {
 
 do_i2c
 
-echo "Enabling I2C-1 in config.txt"
 grep 'dtparam=i2c_arm' /boot/config.txt >/dev/null
 if [ $? -eq 0 ]; then
 	sudo sed -i '/dtparam=i2c_arm/c\dtparam=i2c_arm' /boot/config.txt
@@ -51,8 +50,8 @@ echo "Compiling the joystick driver"
 make clean
 make
 echo "Disabling and removing existing gamepad service"
-systemctl stop gamepad
-systemctl disable gamepad
+systemctl stop gamepad 2>/dev/null
+systemctl disable gamepad 2>/dev/null
 echo "Do you want the driver to load at startup (Enter 1 for Yes or 2 for No)?"
 select yn in "Yes" "No"; do
     case $yn in
