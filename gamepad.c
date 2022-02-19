@@ -35,7 +35,7 @@ uint16_t ADCstore[4] = {
   1650
 };
 
-bool rightJoystickEnabled = 0;
+uint8_t numberOfJoysticks = 1;
 
 // specify addresses for expanders
 #define MCP23017_ADDRESS 0x20
@@ -163,7 +163,6 @@ void ADS1015setInput(int I2C, int input) { // has to be done every time we read 
   write(I2C, ADS1015writeBuffer, 3); // all 3 bytes must be sent each time
   ADS1015writeBuffer[0] = ADS1015_CONVERT_REGISTER; // indicate that we are ready to read the conversion register
   write(I2C, ADS1015writeBuffer, 1);
-
 }
 
 void ADS1015readInput(int I2C, int input) {
@@ -209,20 +208,22 @@ int createUInputDevice() {
   ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY16);
 
   // axis
-  ioctl(fd, UI_SET_EVBIT, EV_ABS);
-  // left joystick
-  ioctl(fd, UI_SET_ABSBIT, ABS_X);
-  uidev.absmin[ABS_X] = 0; // center position is 1650
-  uidev.absmax[ABS_X] = 3300; // center position is 1650
-  uidev.absflat[ABS_X] = 75; // deadzone
-  //uidev.absfuzz[ABS_X] = 0; // what does this do?
-  ioctl(fd, UI_SET_ABSBIT, ABS_Y);
-  uidev.absmin[ABS_Y] = 0; // center position is 1650
-  uidev.absmax[ABS_Y] = 3300; // center position is 1650
-  uidev.absflat[ABS_Y] = 75; // deadzone
-  //uidev.absfuzz[ABS_Y] = 0; // what does this do?
+  if (numberOfJoysticks) {
+    ioctl(fd, UI_SET_EVBIT, EV_ABS);
+    // left joystick
+    ioctl(fd, UI_SET_ABSBIT, ABS_X);
+    uidev.absmin[ABS_X] = 0; // center position is 1650
+    uidev.absmax[ABS_X] = 3300; // center position is 1650
+    uidev.absflat[ABS_X] = 75; // deadzone
+    //uidev.absfuzz[ABS_X] = 0; // what does this do?
+    ioctl(fd, UI_SET_ABSBIT, ABS_Y);
+    uidev.absmin[ABS_Y] = 0; // center position is 1650
+    uidev.absmax[ABS_Y] = 3300; // center position is 1650
+    uidev.absflat[ABS_Y] = 75; // deadzone
+    //uidev.absfuzz[ABS_Y] = 0; // what does this do?
+  }
 
-  if (rightJoystickEnabled) {
+  if (numberOfJoysticks == 2) {
     // right joystick
     ioctl(fd, UI_SET_ABSBIT, ABS_RX);
     uidev.absmin[ABS_RX] = 0; // center position is 1650
@@ -284,27 +285,52 @@ void updateJoystick(int virtualGamepad) {
   // update joystick
   emit(virtualGamepad, EV_ABS, ABS_X, ADCstore[0]);
   emit(virtualGamepad, EV_ABS, ABS_Y, ADCstore[1]);
-  if (rightJoystickEnabled) {
+  if (numberOfJoysticks == 2) {
     emit(virtualGamepad, EV_ABS, ABS_RX, ADCstore[2]);
     emit(virtualGamepad, EV_ABS, ABS_RY, ADCstore[3]);
   }
-
 }
 
-int main(void) {
+
+int main(int argc, char * argv[]) {
+  int ctr;
+     for( ctr=0; ctr < argc; ctr++ ) {
+        if ((!strcmp("-j", argv[ctr])) || (!strcmp("--joysticks", argv[ctr]))) {
+          if (argc < (ctr + 2)) {
+            printf("Must include the number of joysticks (0, 1 or 2)\n");
+            exit(1);
+          }
+          if (!strcmp("0", argv[ctr + 1])) {
+            numberOfJoysticks = 0;
+          } else if (!strcmp("1", argv[ctr + 1])) {
+            numberOfJoysticks = 1;
+          } else if (!strcmp("2", argv[ctr + 1])) {
+            numberOfJoysticks = 2;
+          } else {
+            printf("Incorrect number of joysticks requested (must be 0, 1, or 2)\n");
+            exit(1);
+          }
+        }
+     }
+
   int virtualGamepad = createUInputDevice(); // create uinput device
-  int adcFile = ADS1015open(); // open ADC I2C device
+  int adcFile;
+  if (numberOfJoysticks) {
+    adcFile = ADS1015open(); // open ADC I2C device
+  }
   int mcpFile = MCP23017open(); // open Expander device
   //set initial ADC condition
   int ADC = 0;
   int maxADC;
-  if (rightJoystickEnabled) {
+  if (numberOfJoysticks == 2) {
     maxADC = 3;
   } else {
     maxADC = 1;
   }
-  ADS1015writeConfig(adcFile, ADC);
-  ADS1015setInput(adcFile, ADC);
+  if (numberOfJoysticks) {
+    ADS1015writeConfig(adcFile, ADC);
+    ADS1015setInput(adcFile, ADC);
+  }
   MCP23017writeConfig(mcpFile);
   //set initial button condition
   MCP23017read(mcpFile);
@@ -312,14 +338,16 @@ int main(void) {
   updateButtons(virtualGamepad, tempReadBuffer);
   bool reportUinput = 0;
   while (1) {
-    ADS1015readInput(adcFile, ADC); //read the ADC
-    ADC++;
-    if (ADC > maxADC) {
-      updateJoystick(virtualGamepad); // update the joystick after all analog inputs have been read
-      reportUinput = 1;
-      ADC = 0;
+    if (numberOfJoysticks) {
+      ADS1015readInput(adcFile, ADC); //read the ADC
+      ADC++;
+      if (ADC > maxADC) {
+        updateJoystick(virtualGamepad); // update the joystick after all analog inputs have been read
+        reportUinput = 1;
+        ADC = 0;
+      }
+      ADS1015setInput(adcFile, ADC); //set configuration for ADS1015 for next loop
     }
-    ADS1015setInput(adcFile, ADC); //set configuration for ADS1015 for next loop
     MCP23017read(mcpFile); //read the expander
     tempReadBuffer = (MCP23017readBuffer[0] << 8) | (MCP23017readBuffer[1] & 0xff);
     if (tempReadBuffer != previousReadBuffer) {
