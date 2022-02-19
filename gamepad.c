@@ -127,8 +127,10 @@ void MCP23017read(int I2C) {
   write(I2C, MCP23017writeBuffer, 1); // prepare to read ports A and B
   //reading two bytes causes it to autoincrement to the next byte, so it reads port B
   if (read(I2C, MCP23017readBuffer, 2) != 2) {
+    printf("Unable to communicate with the MCP23017\n");
     MCP23017readBuffer[0] = 0xFF;
     MCP23017readBuffer[1] = 0xFF;
+    sleep(1);
   }
 }
 
@@ -169,7 +171,9 @@ void ADS1015readInput(int I2C, int input) {
   // read the conversion. we waited long enough for the reading to be ready, so we arent checking the conversion register
   if (read(I2C, ADS1015readBuffer, 2) != 2) {
     // if no data was received, center the joystick
+    printf("Unable to communicate with the ADS1015\n");
     ADCstore[input] = 1650;
+    sleep(1);
   } else {
     ADCstore[input] = (((ADS1015readBuffer[0] << 8) | ((ADS1015readBuffer[1] & 0xff))) >> 4) * 3;
   }
