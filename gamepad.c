@@ -118,7 +118,8 @@ void MCP23017writeConfig(int I2C) {
   MCP23017writeBuffer[0] = MCP23017_GPPUB; // GPIO Pullup Register
   MCP23017writeBuffer[1] = 0xFF; // Enable Pullup on GPIO B
   if (write(I2C, MCP23017writeBuffer, 2) != 2) {
-    printf("MCP23017 was not detected at address 0x%X. Buttons will not function.\n", MCP23017_ADDRESS);
+    printf("MCP23017 was not detected at address 0x%X. Check wiring and try again.\n", MCP23017_ADDRESS);
+    exit(1);
   }
 }
 
@@ -155,7 +156,8 @@ void ADS1015writeConfig(int I2C, int input) { //only needs to be done once
   ADS1015writeBuffer[1] = ADS1015_OS_ON + analogInput[input] + ADS1015_INPUT_GAIN + ADS1015_MODE;
   ADS1015writeBuffer[2] = DR490 + ADS1015_COMPARATOR_MODE + ADS1015_COMPARATOR_POLARITY + ADS1015_COMPARATOR_LATCH + ADS1015_COMPARATOR_QUEUE;
   if (write(I2C, ADS1015writeBuffer, 3) != 3) {
-    printf("ADS1015 was not detected at address 0x%X. Joystick will not function.\n", ADS1015_ADDRESS);
+    printf("ADS1015 was not detected at address 0x%X. Check wiring and try again, or disable the joystick using argument -j 0.\n", ADS1015_ADDRESS);
+    exit(1);
   }
 }
 
