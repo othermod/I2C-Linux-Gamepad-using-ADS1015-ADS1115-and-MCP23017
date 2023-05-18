@@ -23,10 +23,10 @@ const int analogInput[] = {
 uint8_t readBuffer[2];
 uint8_t writeBuffer[3];
 
-uint8_t ADS1015readBuffer[2];
-uint8_t ADS1015writeBuffer[3];
-uint8_t MCP23017readBuffer[2];
-uint8_t MCP23017writeBuffer[2];
+uint8_t ADSreadBuffer[2];
+uint8_t ADSwriteBuffer[3];
+uint8_t MCP_readBuffer[2];
+uint8_t MCPwriteBuffer[2];
 uint16_t previousReadBuffer;
 uint16_t ADCstore[4] = {
   1650,
@@ -38,57 +38,35 @@ uint16_t ADCstore[4] = {
 uint8_t numberOfJoysticks = 1;
 
 // specify addresses for expanders
-#define MCP23017_ADDRESS 0x20
-#define ADS1015_ADDRESS 0x48
+#define MCP_ADDRESS 0x20
+#define ADS_ADDRESS 0x48
 
 #define I2C_BUS "/dev/i2c-1" //specify which I2C bus to use
 
-// stuff for the GPIO expander
-#define MCP23017_IODIRA 0x00
-#define MCP23017_IPOLA 0x02
-#define MCP23017_GPINTENA 0x04
-#define MCP23017_DEFVALA 0x06
-#define MCP23017_INTCONA 0x08
-#define MCP23017_IOCONA 0x0A
-#define MCP23017_GPPUA 0x0C
-#define MCP23017_INTFA 0x0E
-#define MCP23017_INTCAPA 0x10
-#define MCP23017_GPIOA 0x12
-#define MCP23017_OLATA 0x14
-
-#define MCP23017_IODIRB 0x01
-#define MCP23017_IPOLB 0x03
-#define MCP23017_GPINTENB 0x05
-#define MCP23017_DEFVALB 0x07
-#define MCP23017_INTCONB 0x09
-#define MCP23017_IOCONB 0x0B
-#define MCP23017_GPPUB 0x0D
-#define MCP23017_INTFB 0x0F
-#define MCP23017_INTCAPB 0x11
-#define MCP23017_GPIOB 0x13
-#define MCP23017_OLATB 0x15
+// GPIO expander registers
+#define MCP_IODIRA 0x00
+#define MCP_GPPUA 0x0C
+#define MCP_GPIOA 0x12
+#define MCP_IODIRB 0x01
+#define MCP_GPPUB 0x0D
+#define MCP_GPIOB 0x13
 
 // stuff for the ADC
-#define DR128 0
-#define DR250 0x20
 #define DR490 0x40
-#define DR920 0x60
-#define DR1600 0x80
-#define DR2400 0xA0
-#define DR3300 0xC0
+#define DR1600_DR128 0x80
 
-#define ADS1015_MODE 1 //single shot mode
-#define ADS1015_INPUT_GAIN 0 //full 6.144v voltage range
-#define ADS1015_COMPARATOR_MODE 0
-#define ADS1015_COMPARATOR_POLARITY 0 //active low
-#define ADS1015_COMPARATOR_LATCH 0
-#define ADS1015_COMPARATOR_QUEUE 0x03 //no comp
-#define ADS1015_OS_ON 0x80 // bit 15
+#define ADS_MODE 1 //single shot mode
+#define ADS_INPUT_GAIN 0 //full 6.144v voltage range
+#define ADS_COMPARATOR_MODE 0
+#define ADS_COMPARATOR_POLARITY 0 //active low
+#define ADS_COMPARATOR_LATCH 0
+#define ADS_COMPARATOR_QUEUE 0x03 //no comp
+#define ADS_OS_ON 0x80 // bit 15
 // pointer register
-#define ADS1015_CONVERT_REGISTER 0
-#define ADS1015_CONFIG_REGISTER 1
+#define ADS_CONVERT_REGISTER 0
+#define ADS_CONFIG_REGISTER 1
 
-int MCP23017open() {
+int MCP_open() {
   // open the i2c device
   int file;
   char * filename = I2C_BUS; //specify which I2C bus to use
@@ -97,45 +75,45 @@ int MCP23017open() {
     exit(1);
   }
   // initialize the device
-  if (ioctl(file, I2C_SLAVE, MCP23017_ADDRESS) < 0) {
+  if (ioctl(file, I2C_SLAVE, MCP_ADDRESS) < 0) {
     printf("Failed to acquire bus access and/or talk to slave.\n");
     exit(1);
   }
   return file;
 }
 
-void MCP23017writeConfig(int I2C) {
+void MCP_writeConfig(int I2C) {
   // set the pointer to the config register
-  MCP23017writeBuffer[0] = MCP23017_IODIRA; // GPIO direction register
-  MCP23017writeBuffer[1] = 0xFF; // Set GPIO A to input
-  write(I2C, MCP23017writeBuffer, 2);
-  MCP23017writeBuffer[0] = MCP23017_IODIRB; // GPIO direction register
-  MCP23017writeBuffer[1] = 0xFF; // Set GPIO B to input
-  write(I2C, MCP23017writeBuffer, 2);
-  MCP23017writeBuffer[0] = MCP23017_GPPUA; // GPIO Pullup Register
-  MCP23017writeBuffer[1] = 0xFF; // Enable Pullup on GPIO A
-  write(I2C, MCP23017writeBuffer, 2);
-  MCP23017writeBuffer[0] = MCP23017_GPPUB; // GPIO Pullup Register
-  MCP23017writeBuffer[1] = 0xFF; // Enable Pullup on GPIO B
-  if (write(I2C, MCP23017writeBuffer, 2) != 2) {
-    printf("MCP23017 was not detected at address 0x%X. Check wiring and try again.\n", MCP23017_ADDRESS);
+  MCPwriteBuffer[0] = MCP_IODIRA; // GPIO direction register
+  MCPwriteBuffer[1] = 0xFF; // Set GPIO A to input
+  write(I2C, MCPwriteBuffer, 2);
+  MCPwriteBuffer[0] = MCP_IODIRB; // GPIO direction register
+  MCPwriteBuffer[1] = 0xFF; // Set GPIO B to input
+  write(I2C, MCPwriteBuffer, 2);
+  MCPwriteBuffer[0] = MCP_GPPUA; // GPIO Pullup Register
+  MCPwriteBuffer[1] = 0xFF; // Enable Pullup on GPIO A
+  write(I2C, MCPwriteBuffer, 2);
+  MCPwriteBuffer[0] = MCP_GPPUB; // GPIO Pullup Register
+  MCPwriteBuffer[1] = 0xFF; // Enable Pullup on GPIO B
+  if (write(I2C, MCPwriteBuffer, 2) != 2) {
+    printf("MCP23017 was not detected at address 0x%X. Check wiring and try again.\n", MCP_ADDRESS);
     exit(1);
   }
 }
 
-void MCP23017read(int I2C) {
-  MCP23017writeBuffer[0] = MCP23017_GPIOA;
-  write(I2C, MCP23017writeBuffer, 1); // prepare to read ports A and B
+void MCP_read(int I2C) {
+  MCPwriteBuffer[0] = MCP_GPIOA;
+  write(I2C, MCPwriteBuffer, 1); // prepare to read ports A and B
   //reading two bytes causes it to autoincrement to the next byte, so it reads port B
-  if (read(I2C, MCP23017readBuffer, 2) != 2) {
-    printf("Unable to communicate with the MCP23017\n");
-    MCP23017readBuffer[0] = 0xFF;
-    MCP23017readBuffer[1] = 0xFF;
+  if (read(I2C, MCP_readBuffer, 2) != 2) {
+    printf("Unable to communicate with the MCP IC\n");
+    MCP_readBuffer[0] = 0xFF;
+    MCP_readBuffer[1] = 0xFF;
     sleep(1);
   }
 }
 
-int ADS1015open() {
+int ADS_open() {
   // open the i2c device
   int file;
   char * filename = I2C_BUS; //specify which I2C bus to use
@@ -144,45 +122,46 @@ int ADS1015open() {
     exit(1);
   }
   // initialize the device
-  if (ioctl(file, I2C_SLAVE, ADS1015_ADDRESS) < 0) {
+  if (ioctl(file, I2C_SLAVE, ADS_ADDRESS) < 0) {
     printf("Failed to acquire bus access and/or talk to slave.\n");
     exit(1);
   }
   return file;
 }
 
-void ADS1015writeConfig(int I2C, int input) { //only needs to be done once
-  ADS1015writeBuffer[0] = ADS1015_CONFIG_REGISTER;
-  ADS1015writeBuffer[1] = ADS1015_OS_ON + analogInput[input] + ADS1015_INPUT_GAIN + ADS1015_MODE;
   ADS1015writeBuffer[2] = DR490 + ADS1015_COMPARATOR_MODE + ADS1015_COMPARATOR_POLARITY + ADS1015_COMPARATOR_LATCH + ADS1015_COMPARATOR_QUEUE;
-  if (write(I2C, ADS1015writeBuffer, 3) != 3) {
-    printf("ADS1015 was not detected at address 0x%X. Check wiring and try again, or disable the joystick using argument -j 0.\n", ADS1015_ADDRESS);
+void ADS_writeConfig(int I2C, int input) { //only needs to be done once
+  ADSwriteBuffer[0] = ADS_CONFIG_REGISTER;
+  ADSwriteBuffer[1] = ADS_OS_ON + analogInput[input] + ADS_INPUT_GAIN + ADS_MODE;
+  ADSwriteBuffer[2] = DR1600_DR128 + ADS_COMPARATOR_MODE + ADS_COMPARATOR_POLARITY + ADS_COMPARATOR_LATCH + ADS_COMPARATOR_QUEUE;
+  if (write(I2C, ADSwriteBuffer, 3) != 3) {
+    printf("ADS1015/1115 was not detected at address 0x%X. Check wiring and try again, or disable the joystick using argument -j 0.\n", ADS_ADDRESS);
     exit(1);
   }
 }
 
-void ADS1015setInput(int I2C, int input) { // has to be done every time we read a different input
-  ADS1015writeBuffer[0] = ADS1015_CONFIG_REGISTER;
-  ADS1015writeBuffer[1] = ADS1015_OS_ON + analogInput[input] + ADS1015_INPUT_GAIN + ADS1015_MODE;
-  write(I2C, ADS1015writeBuffer, 3); // all 3 bytes must be sent each time
-  ADS1015writeBuffer[0] = ADS1015_CONVERT_REGISTER; // indicate that we are ready to read the conversion register
-  write(I2C, ADS1015writeBuffer, 1);
+void ADS_setInput(int I2C, int input) { // has to be done every time we read a different input
+  ADSwriteBuffer[0] = ADS_CONFIG_REGISTER;
+  ADSwriteBuffer[1] = ADS_OS_ON + analogInput[input] + ADS_INPUT_GAIN + ADS_MODE;
+  write(I2C, ADSwriteBuffer, 3); // all 3 bytes must be sent each time
+  ADSwriteBuffer[0] = ADS_CONVERT_REGISTER; // indicate that we are ready to read the conversion register
+  write(I2C, ADSwriteBuffer, 1);
 }
 
-void ADS1015readInput(int I2C, int input) {
+void ADS_readInput(int I2C, int input) {
   // read the conversion. we waited long enough for the reading to be ready, so we arent checking the conversion register
-  if (read(I2C, ADS1015readBuffer, 2) != 2) {
+  if (read(I2C, ADSreadBuffer, 2) != 2) {
     // if no data was received, center the joystick
-    printf("Unable to communicate with the ADS1015\n");
+    printf("Unable to communicate with the ADS IC\n");
     ADCstore[input] = 1650;
     sleep(1);
   } else {
-    ADCstore[input] = (((ADS1015readBuffer[0] << 8) | ((ADS1015readBuffer[1] & 0xff))) >> 4) * 3;
+    ADCstore[input] = (((ADSreadBuffer[0] << 8) | ((ADSreadBuffer[1] & 0xff))) >> 4) * 3; // this should also work with the 1115, and will reduce the 16 bits to 12
   }
 
 }
 
-int createUInputDevice() {
+int createGamepad() {
   int fd;
   fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
   if (fd < 0) {
@@ -297,7 +276,6 @@ void updateJoystick(int virtualGamepad) {
   }
 }
 
-
 int main(int argc, char * argv[]) {
   int ctr;
      for( ctr=0; ctr < argc; ctr++ ) {
@@ -319,12 +297,12 @@ int main(int argc, char * argv[]) {
         }
      }
 
-  int virtualGamepad = createUInputDevice(); // create uinput device
+  int virtualGamepad = createGamepad(); // create uinput device
   int adcFile;
   if (numberOfJoysticks) {
-    adcFile = ADS1015open(); // open ADC I2C device
+    adcFile = ADS_open(); // open ADC I2C device
   }
-  int mcpFile = MCP23017open(); // open Expander device
+  int mcpFile = MCP_open(); // open Expander device
   //set initial ADC condition
   int ADC = 0;
   int maxADC;
@@ -334,28 +312,28 @@ int main(int argc, char * argv[]) {
     maxADC = 1;
   }
   if (numberOfJoysticks) {
-    ADS1015writeConfig(adcFile, ADC);
-    ADS1015setInput(adcFile, ADC);
+    ADS_writeConfig(adcFile, ADC);
+    ADS_setInput(adcFile, ADC);
   }
-  MCP23017writeConfig(mcpFile);
+  MCP_writeConfig(mcpFile);
   //set initial button condition
-  MCP23017read(mcpFile);
+  MCP_read(mcpFile);
   uint16_t tempReadBuffer = 0x00;
   updateButtons(virtualGamepad, tempReadBuffer);
   bool reportUinput = 0;
   while (1) {
     if (numberOfJoysticks) {
-      ADS1015readInput(adcFile, ADC); //read the ADC
+      ADS_readInput(adcFile, ADC); //read the ADC
       ADC++;
       if (ADC > maxADC) {
         updateJoystick(virtualGamepad); // update the joystick after all analog inputs have been read
         reportUinput = 1;
         ADC = 0;
       }
-      ADS1015setInput(adcFile, ADC); //set configuration for ADS1015 for next loop
+      ADS_setInput(adcFile, ADC); //set configuration for ADS for next loop
     }
-    MCP23017read(mcpFile); //read the expander
-    tempReadBuffer = (MCP23017readBuffer[0] << 8) | (MCP23017readBuffer[1] & 0xff);
+    MCP_read(mcpFile); //read the expander
+    tempReadBuffer = (MCP_readBuffer[0] << 8) | (MCP_readBuffer[1] & 0xff);
     if (tempReadBuffer != previousReadBuffer) {
       updateButtons(virtualGamepad, tempReadBuffer);
       reportUinput = 1;
