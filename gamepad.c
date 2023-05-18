@@ -173,22 +173,9 @@ int createGamepad() {
   ioctl(fd, UI_SET_EVBIT, EV_KEY);
   ioctl(fd, UI_SET_EVBIT, EV_REL);
   // button
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY1);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY2);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY3);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY4);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY5);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY6);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY7);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY8);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY9);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY10);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY11);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY12);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY13);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY14);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY15);
-  ioctl(fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY16);
+  for (int i = BTN_TRIGGER_HAPPY1; i <= BTN_TRIGGER_HAPPY16; i++) {
+    ioctl(fd, UI_SET_KEYBIT, i);
+  }
 
   // axis
   if (numberOfJoysticks) {
@@ -245,23 +232,9 @@ void emit(int virtualGamepad, int type, int code, int val) {
 }
 
 void updateButtons(int virtualGamepad, int buttons) {
-  // update button event
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY1, !((buttons >> 0x00) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY2, !((buttons >> 0x01) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY3, !((buttons >> 0x02) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY4, !((buttons >> 0x03) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY5, !((buttons >> 0x04) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY6, !((buttons >> 0x05) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY7, !((buttons >> 0x06) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY8, !((buttons >> 0x07) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY9, !((buttons >> 0x08) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY10, !((buttons >> 0x09) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY11, !((buttons >> 0x0A) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY12, !((buttons >> 0x0B) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY13, !((buttons >> 0x0C) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY14, !((buttons >> 0x0D) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY15, !((buttons >> 0x0E) & 1));
-  emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY16, !((buttons >> 0x0F) & 1));
+  for (int i = 0; i < 16; i++) {
+    emit(virtualGamepad, EV_KEY, BTN_TRIGGER_HAPPY1 + i, !(buttons >> i & 1));
+  }
 }
 
 void updateJoystick(int virtualGamepad) {
