@@ -221,12 +221,12 @@ int createUInputDevice() {
     uidev.absmin[ABS_X] = 0; // center position is 1650
     uidev.absmax[ABS_X] = 3300; // center position is 1650
     uidev.absflat[ABS_X] = 75; // deadzone
-    //uidev.absfuzz[ABS_X] = 0; // what does this do?
+    uidev.absfuzz[ABS_X] = 75; // hysteresis
     ioctl(fd, UI_SET_ABSBIT, ABS_Y);
     uidev.absmin[ABS_Y] = 0; // center position is 1650
     uidev.absmax[ABS_Y] = 3300; // center position is 1650
     uidev.absflat[ABS_Y] = 75; // deadzone
-    //uidev.absfuzz[ABS_Y] = 0; // what does this do?
+    uidev.absfuzz[ABS_Y] = 75; // hysteresis
   }
 
   if (numberOfJoysticks == 2) {
@@ -235,12 +235,12 @@ int createUInputDevice() {
     uidev.absmin[ABS_RX] = 0; // center position is 1650
     uidev.absmax[ABS_RX] = 3300; // center position is 1650
     uidev.absflat[ABS_RX] = 75; // deadzone
-    //uidev.absfuzz[ABS_RX] = 0; // what does this do?
+    uidev.absfuzz[ABS_RX] = 75; // hysteresis
     ioctl(fd, UI_SET_ABSBIT, ABS_RY);
     uidev.absmin[ABS_RY] = 0; // center position is 1650
     uidev.absmax[ABS_RY] = 3300; // center position is 1650
     uidev.absflat[ABS_RY] = 75; // deadzone
-    //uidev.absfuzz[ABS_Y] = 0; // what does this do?
+    uidev.absfuzz[ABS_Y] = 75; // hysteresis
   }
 
   snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "othermod Gamepad");
