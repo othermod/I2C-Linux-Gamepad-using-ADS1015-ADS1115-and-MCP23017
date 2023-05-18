@@ -52,7 +52,6 @@ uint8_t numberOfJoysticks = 1;
 #define MCP_GPIOB 0x13
 
 // stuff for the ADC
-#define DR490 0x40
 #define DR1600_DR128 0x80
 
 #define ADS_MODE 1 //single shot mode
@@ -129,7 +128,6 @@ int ADS_open() {
   return file;
 }
 
-  ADS1015writeBuffer[2] = DR490 + ADS1015_COMPARATOR_MODE + ADS1015_COMPARATOR_POLARITY + ADS1015_COMPARATOR_LATCH + ADS1015_COMPARATOR_QUEUE;
 void ADS_writeConfig(int I2C, int input) { //only needs to be done once
   ADSwriteBuffer[0] = ADS_CONFIG_REGISTER;
   ADSwriteBuffer[1] = ADS_OS_ON + analogInput[input] + ADS_INPUT_GAIN + ADS_MODE;
