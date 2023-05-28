@@ -273,8 +273,8 @@ int main(int argc, char * argv[]) {
         activeADC = 0;
       }
       ADS_setInput(file, activeADC); //set configuration for ADS for next loop
+      MCP_select(file);
     }
-    MCP_select(file);
     MCP_read(file); //read the expander
     combinedButtons = (MCP_Buffer[0] << 8) | (MCP_Buffer[1] & 0xff);
     if (combinedButtons != previousButtons) {
