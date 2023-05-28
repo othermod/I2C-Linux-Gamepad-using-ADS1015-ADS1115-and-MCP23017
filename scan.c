@@ -39,6 +39,7 @@ bool checkDeviceOnBus(const char* bus, int addr) {
 int main() {
   bool foundMCP;
   bool foundADS;
+  bool foundAnything = 0;
     for (int i = 0; i < 23; i++) { // typically there are 2 buses: /dev/i2c-0 and /dev/i2c-1
         char filename[20];
         sprintf(filename, "/dev/i2c-%d", i);
@@ -46,11 +47,17 @@ int main() {
         foundADS = checkDeviceOnBus(filename, ADS_ADDRESS);
         if (foundMCP & foundADS) {
           printf("Found both the MCP23017 and ADS1x15 on i2c-%d\n", i);
+          foundAnything = 1;
         } else if (foundMCP & !foundADS){
           printf("Found only the MCP23017 on i2c-%d\n", i);
+          foundAnything = 1;
         } else if (!foundMCP & foundADS){
           printf("Found only the ADS1x15 on i2c-%d\n", i);
+          foundAnything = 1;
         }
+    }
+    if (!foundAnything) {
+      printf("Found neither module during scanning. Check your wiring.\n");
     }
     return 0;
 }
