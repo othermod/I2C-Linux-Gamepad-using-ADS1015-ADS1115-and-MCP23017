@@ -22,6 +22,12 @@ The wiring and setup of your Raspberry Pi for the gamepad is broken down into tw
 - ADS1x15 GND to Raspberry Pi GND
 - ADS1x15 SCL to Raspberry Pi SCL
 - ADS1x15 SDA to Raspberry Pi SDA​
+- ADS1x15 A0 to the X axis of your left joystick
+- ADS1x15 A1 to the Y axis of your left joystick
+- ADS1x15 A2 to the X axis of your right joystick
+- ADS1x15 A3 to the Y axis of your right joystick
+- Joystick VDD to Raspberry Pi 3.3V
+- Joystick GND to Raspberry Pi GND
 
 2. Wiring the MCP23017 Digital Input. The MCP23017 handles digital input for up to 16 buttons. The wiring of the MCP23017 to the Raspberry Pi is as follows:
 
@@ -30,7 +36,7 @@ The wiring and setup of your Raspberry Pi for the gamepad is broken down into tw
 - MCP23017 SCL to Raspberry Pi SCL
 - MCP23017 SDA to Raspberry Pi SDA​
 - You can change the address of the chip by hooking each of the 3 address pins to either ground or 3.3v. The driver expects all of these pins to be connected to GND, which the module should have done already, meaning that you can leave the pins alone.
-- GPB0 – GPB7 and GPA0 – GPA7 are GPIO pins. They will be pulled up to 3.3v by the module, so you should connect each pushbutton to ground.
+- GPB0 – GPB7 and GPA0 – GPA7 to your pushbuttons. The GPIOs are pulled up to 3.3v by the module, so you should connect each pushbutton to ground.
 
 ## Software Setup
 After the hardware setup, you can proceed with the software installation.
