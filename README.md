@@ -56,7 +56,7 @@ The gamepad should be detected in the same way that USB gamepads are detected. T
 
 If you encounter any issues while using the gamepad, you can try the following:
 
-- Check the wiring of the gamepad, to verify that the MCP23017 AND ADS1x15 I2C modules are correctly connected.
+- Check the wiring of the gamepad, to verify that the MCP23017 and ADS1x15 I2C modules are correctly connected.
 
 ## Contributing
 
