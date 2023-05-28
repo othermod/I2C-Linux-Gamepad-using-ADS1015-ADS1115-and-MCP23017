@@ -75,6 +75,11 @@ sudo apt-get install -y joystick
 
 The command will display the status of your joystick and buttons. It assumes that the othermod gamepad is the first gamepad. If your device is not at js0, you may need to try other numbers such as js1, etc.
 
+You can list your devices with the following command:
+```
+ls /dev/input/js*
+```
+
 ### Using the Gamepad in Games
 
 The gamepad should be detected in the same way that USB gamepads are detected. To use the gamepad, go to the game settings and select the othermod gamepad as your input device.
