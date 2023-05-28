@@ -1,7 +1,12 @@
 # I2C Analog/Digital Gamepad for the Raspberry Pi
 
+## Overview
+
+This project allows you to create a gamepad using two I2C modules, suitable for a variety of games on the Raspberry Pi. The gamepad created can handle both analog and digital input, giving you a full-fledged gaming experience. This project is perfect for gaming enthusiasts looking for a fun and engaging DIY project, educators teaching technology or programming, and anyone interested in learning more about the interaction between hardware and software in game controllers.
+
 ## Introduction
-This project allows you to create a full gamepad using two I2C modules, suitable for use with a variety of games on the Raspberry Pi. The ADS1015 or ADS1115 handle analog input for the joystick, and the MCP23017 handles digital input for up to 16 buttons.
+
+The ADS1015 or ADS1115 handle analog input for the joystick, and the MCP23017 handles digital input for up to 16 buttons. By the end of this guide, you'll have a functional gamepad that you can use with your favorite games on your Raspberry Pi.
 
 ## Prerequisites
 Hardware:
@@ -11,9 +16,13 @@ Hardware:
 
 Software:
 - GCC Compiler
-- I2C Tools for advanced troubleshooting (sudo apt install -y i2c-tools)
+- Jstest to verify function
+- I2C Tools for advanced troubleshooting
 
 ## Hardware Setup
+
+![diagram](/images/diagram.png)
+
 The wiring and setup of your Raspberry Pi for the gamepad is broken down into two parts:
 
 1. Wiring the ADS1015 or ADS1115 Analog-to-Digital Converter (ADC). Both the ADS1015 and ADS1115 use the same I2C communication protocol to read analog values. You can wire each chip to the Pi in the following way:
@@ -39,7 +48,12 @@ The wiring and setup of your Raspberry Pi for the gamepad is broken down into tw
 - GPB0 – GPB7 and GPA0 – GPA7 to your pushbuttons. The GPIOs are pulled up to 3.3v by the module, so you should connect each pushbutton to ground.
 
 ## Software Setup
-After the hardware setup, you can proceed with the software installation.
+Before proceeding with the software installation, ensure that you have the necessary software installed on your Raspberry Pi, including the GCC Compiler.
+
+If you haven't installed GCC Compiler, you can do so with the following command:
+```
+sudo apt-get install -y gcc
+```
 
 Installation is done by copying `setup.sh`, `gamepad.c`, `Makefile`, and `gamepad.service` to a folder on your Raspberry Pi (or other Linux device) and running `sudo bash setup.sh`. The driver will compile and I2C will get configured, and then the script will ask whether you want to load the driver at startup.
 
@@ -47,7 +61,19 @@ Installation is done by copying `setup.sh`, `gamepad.c`, `Makefile`, and `gamepa
 
 ### Testing the Gamepad
 
-Before you start playing, you might want to test whether the gamepad is working as expected. You can do this using a tool like `jstest` or `evtest` to check the status of the joystick and buttons.
+Before you start playing, you might want to test whether the gamepad is working as expected. You can do this using a tool like jstest.
+
+To use jstest, you can use the following command:
+```
+jstest /dev/input/js0
+```
+
+If jstest is not installed, you can install it with:
+```
+sudo apt-get install -y joystick
+```
+
+The command will display the status of your joystick and buttons. It assumes that the othermod gamepad is the first gamepad. If your device is not at js0, you may need to try other numbers such as js1, etc.
 
 ### Using the Gamepad in Games
 
@@ -56,6 +82,15 @@ The gamepad should be detected in the same way that USB gamepads are detected. T
 ### Troubleshooting
 
 If you encounter any issues while using the gamepad, verify that the MCP23017 and ADS1x15 I2C modules are correctly connected.
+
+Other common issues and their solutions are:
+
+- **Gamepad not recognized**: Try rebooting your Raspberry Pi. If the problem persists, ensure that the driver is being loaded at startup.
+- **Buttons/joystick not responsive**: Double-check your wiring. If a button or joystick axis is not working, it may be due to a loose connection.
+- **Compilation errors during software setup**: Ensure that the GCC Compiler is correctly installed on your Raspberry Pi.
+
+Remember, you can use the I2C Tools for advanced troubleshooting (`sudo apt install -y i2c-tools`).
+
 
 ## Contributing
 
