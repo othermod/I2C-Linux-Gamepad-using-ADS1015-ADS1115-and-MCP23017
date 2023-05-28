@@ -41,22 +41,15 @@ Installation is done by copying `setup.sh`, `gamepad.c`, `Makefile`, and `gamepa
 
 ### Testing the Gamepad
 
-Before you start playing, you might want to test whether the gamepad is working as expected. You can do this by:
-
-- Using a tool like `jstest` or `evtest` to check the status of the joystick and buttons.
+Before you start playing, you might want to test whether the gamepad is working as expected. You can do this using a tool like `jstest` or `evtest` to check the status of the joystick and buttons.
 
 ### Using the Gamepad in Games
 
-The gamepad should be detected in the same way that USB gamepads are detected. To use the gamepad:
-
-1. Start the game that you want to play.
-2. Go to the game settings and select the othermod gamepad as your input device.
+The gamepad should be detected in the same way that USB gamepads are detected. To use the gamepad, go to the game settings and select the othermod gamepad as your input device.
 
 ### Troubleshooting
 
-If you encounter any issues while using the gamepad, you can try the following:
-
-- Check the wiring of the gamepad, to verify that the MCP23017 and ADS1x15 I2C modules are correctly connected.
+If you encounter any issues while using the gamepad, verify that the MCP23017 and ADS1x15 I2C modules are correctly connected.
 
 ## Contributing
 
