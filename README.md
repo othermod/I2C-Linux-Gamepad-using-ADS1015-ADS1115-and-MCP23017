@@ -62,6 +62,7 @@ If you encounter any issues while using the gamepad, you can try the following:
 
 ## License
 
+
 ![ADS1015](/images/ads1015.jpg) ![MCP23017](/images/mcp23017.jpg)
 
 [video guide on othermod.com](https://othermod.com/analog-joystick-on-retropie/)
