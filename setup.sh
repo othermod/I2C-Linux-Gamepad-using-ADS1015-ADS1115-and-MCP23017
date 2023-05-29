@@ -17,6 +17,39 @@ for file_path in "${file_paths[@]}"; do
     fi
 done
 
+
+echo "Enabling I2C"
+
+INTERACTIVE=False
+BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
+CONFIG=/boot/config.txt
+
+do_i2c() {
+    SETTING=on
+    STATUS=enabled
+
+  #set_config_var dtparam=i2c_arm $SETTING $CONFIG &&
+  if ! [ -e $BLACKLIST ]; then
+    touch $BLACKLIST
+  fi
+  sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
+  sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
+  if ! grep -q "^i2c[-_]dev" /etc/modules; then
+    printf "i2c-dev\n" >> /etc/modules
+  fi
+  dtparam i2c_arm=$SETTING
+  modprobe i2c-dev
+}
+
+do_i2c
+
+grep 'dtparam=i2c_arm' /boot/config.txt >/dev/null
+if [ $? -eq 0 ]; then
+	sudo sed -i '/dtparam=i2c_arm/c\dtparam=i2c_arm' /boot/config.txt
+else
+	echo "dtparam=i2c_arm=on" >> /boot/config.txt
+fi
+
 echo "Compiling the i2c scanner."
 rm scan 2>/dev/null
 gcc -o scan scan.c
@@ -53,38 +86,6 @@ while true; do
         echo "Invalid input. The input should be a number from 0 to 22. Please try again."
     fi
 done
-
-echo "Enabling I2C"
-
-INTERACTIVE=False
-BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
-CONFIG=/boot/config.txt
-
-do_i2c() {
-    SETTING=on
-    STATUS=enabled
-
-  #set_config_var dtparam=i2c_arm $SETTING $CONFIG &&
-  if ! [ -e $BLACKLIST ]; then
-    touch $BLACKLIST
-  fi
-  sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
-  sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
-  if ! grep -q "^i2c[-_]dev" /etc/modules; then
-    printf "i2c-dev\n" >> /etc/modules
-  fi
-  dtparam i2c_arm=$SETTING
-  modprobe i2c-dev
-}
-
-do_i2c
-
-grep 'dtparam=i2c_arm' /boot/config.txt >/dev/null
-if [ $? -eq 0 ]; then
-	sudo sed -i '/dtparam=i2c_arm/c\dtparam=i2c_arm' /boot/config.txt
-else
-	echo "dtparam=i2c_arm=on" >> /boot/config.txt
-fi
 
 do_service() {
 echo "Copying new driver and service files"
