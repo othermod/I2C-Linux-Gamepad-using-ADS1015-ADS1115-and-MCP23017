@@ -55,7 +55,7 @@ If you haven't installed GCC Compiler, you can do so with the following command:
 sudo apt-get install -y gcc
 ```
 
-Installation is done by copying `setup.sh`, `gamepad.c`, `Makefile`, and `gamepad.service` to a folder on your Raspberry Pi (or other Linux device) and running `sudo bash setup.sh`. The driver will compile and I2C will get configured, and then the script will ask whether you want to load the driver at startup.
+Installation is done by copying `setup.sh`, `gamepad.c`, `scan.c`, and `gamepad.service` to a folder on your Raspberry Pi (or other Linux device) and running `sudo bash setup.sh`. The driver will compile and I2C will get configured, and then the script will ask whether you want to load the driver at startup.
 
 ## Usage Instructions
 
