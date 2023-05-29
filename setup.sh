@@ -68,16 +68,27 @@ function compile_and_run_i2c_scanner() {
 }
 
 function get_and_set_i2c_bus() {
+    # Scan /dev for available I2C buses
+    available_buses=($(ls /dev/i2c-* 2>/dev/null | sed 's/\/dev\/i2c-//'))
+
+    # Check if any I2C buses were found
+    if [ ${#available_buses[@]} -eq 0 ]; then
+        echo "No I2C buses found"
+        echo "Try rebooting and run the script again"
+        exit 1
+    fi
+
+    echo "List of available I2C buses: ${available_buses[@]}"
     echo "---------------------------------------------"
     echo "Using the above results as a guide, enter the number of the I2C bus"
     echo "The default is 1, but it depends on your setup"
 
     while true; do
-        # Ask the user to input a value from 0 to 22
-        read -p "Enter a number between 0 and 22: " input_value
+        # Ask the user to input a value from the available buses
+        read -p "Enter a number from the available buses: " input_value
 
-        # Check if the input_value is between 0 and 22
-        if [[ "$input_value" =~ ^[0-9]+$ ]] && [ "$input_value" -ge 0 ] && [ "$input_value" -le 22 ]; then
+        # Check if the input_value is in the list of available buses
+        if [[ " ${available_buses[@]} " =~ " ${input_value} " ]]; then
             # Check for the existence of the line in gamepad.c
             if grep -q "#define I2C_BUS \"/dev/i2c-" "gamepad.c"; then
                 # Use sed command to replace the line in gamepad.c
@@ -89,10 +100,11 @@ function get_and_set_i2c_bus() {
                 break
             fi
         else
-            echo "Invalid input. The input should be a number from 0 to 22. Please try again."
+            echo "Invalid input. The input should be a number from the available buses. Please try again."
         fi
     done
 }
+
 
 function install_service() {
     echo "Copying new driver and service files"
