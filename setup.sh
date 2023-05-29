@@ -7,7 +7,7 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 # Paths to the files
-file_paths=("gamepad.c" "scan.c" "Makefile" "gamepad.service")
+file_paths=("gamepad.c" "scan.c" "gamepad.service")
 
 # Check if the files exist
 for file_path in "${file_paths[@]}"; do
