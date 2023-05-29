@@ -1,119 +1,151 @@
 #!/bin/bash
+
 # https://www.othermod.com
-if [ $(id -u) -ne 0 ]; then
-	echo "Installer must be run as root."
-	echo "Try 'sudo bash $0'"
-	exit 1
-fi
 
-# Paths to the files
-file_paths=("gamepad.c" "scan.c" "gamepad.service")
-
-# Check if the files exist
-for file_path in "${file_paths[@]}"; do
-    if [ ! -f "$file_path" ]; then
-        echo "File $file_path not found!"
+function check_root() {
+    if [ $(id -u) -ne 0 ]; then
+        echo "Installer must be run as root."
+        echo "Try 'sudo bash $0'"
         exit 1
     fi
-done
+}
 
+function check_files_exist() {
+    # Paths to the files
+    local file_paths=("gamepad.c" "scan.c" "gamepad.service")
 
-echo "Enabling I2C"
+    # Check if the files exist
+    for file_path in "${file_paths[@]}"; do
+        if [ ! -f "$file_path" ]; then
+            echo "File $file_path not found!"
+            exit 1
+        fi
+    done
+}
 
-INTERACTIVE=False
-BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
-CONFIG=/boot/config.txt
+function enable_i2c() {
+    local INTERACTIVE=False
+    local BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
+    local CONFIG=/boot/config.txt
 
-do_i2c() {
+    echo "Enabling I2C"
+
     SETTING=on
     STATUS=enabled
 
-  #set_config_var dtparam=i2c_arm $SETTING $CONFIG &&
-  if ! [ -e $BLACKLIST ]; then
-    touch $BLACKLIST
-  fi
-  sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
-  sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
-  if ! grep -q "^i2c[-_]dev" /etc/modules; then
-    printf "i2c-dev\n" >> /etc/modules
-  fi
-  dtparam i2c_arm=$SETTING
-  modprobe i2c-dev
-}
-
-do_i2c
-
-grep 'dtparam=i2c_arm' /boot/config.txt >/dev/null
-if [ $? -eq 0 ]; then
-	sudo sed -i '/dtparam=i2c_arm/c\dtparam=i2c_arm' /boot/config.txt
-else
-	echo "dtparam=i2c_arm=on" >> /boot/config.txt
-fi
-
-echo "Compiling the i2c scanner."
-rm scan 2>/dev/null
-gcc -o scan scan.c
-if [ $? -eq 0 ]; then
-    echo "Scanning every i2c bus to find the two modules."
-else
-    echo "Failed to compile the i2c scanner. Make sure you copied the correct scan.c file."
-    exit 1
-fi
-
-./scan
-
-echo ""
-echo "Using the above results as a guide, enter the number of the i2c bus."
-echo "The default is 1, but it depends on your setup."
-
-while true; do
-    # Ask the user to input a value from 0 to 22
-    read input_value
-
-    # Check if the input_value is between 0 and 22
-    if [[ "$input_value" =~ ^[0-9]+$ ]] && [ "$input_value" -ge 0 ] && [ "$input_value" -le 22 ]; then
-        # Check for the existence of the line in gamepad.c
-        if grep -q "#define I2C_BUS \"/dev/i2c-" "gamepad.c"; then
-            # Use sed command to replace the line in gamepad.c
-            sed -i "s|#define I2C_BUS \"/dev/i2c-.*\"|#define I2C_BUS \"/dev/i2c-$input_value\"|g" gamepad.c
-            echo "The file gamepad.c has been updated successfully."
-            break
-        else
-            echo "The line '#define I2C_BUS \"/dev/i2c-\"' does not exist in gamepad.c. Make sure you copied the correct file."
-            break
-        fi
-    else
-        echo "Invalid input. The input should be a number from 0 to 22. Please try again."
+    #set_config_var dtparam=i2c_arm $SETTING $CONFIG &&
+    if ! [ -e $BLACKLIST ]; then
+        touch $BLACKLIST
     fi
-done
+    sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
+    sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
+    if ! grep -q "^i2c[-_]dev" /etc/modules; then
+        printf "i2c-dev\n" >> /etc/modules
+    fi
+    dtparam i2c_arm=$SETTING
+    modprobe i2c-dev
 
-do_service() {
-echo "Copying new driver and service files"
-cp -f gamepad /usr/bin/gamepad
-cp -f gamepad.service /etc/systemd/system/gamepad.service
-echo "Enabling gamepad service"
-systemctl enable gamepad
+    grep 'dtparam=i2c_arm' /boot/config.txt >/dev/null
+    if [ $? -eq 0 ]; then
+        sudo sed -i '/dtparam=i2c_arm/c\dtparam=i2c_arm' /boot/config.txt
+    else
+        echo "dtparam=i2c_arm=on" >> /boot/config.txt
+    fi
 }
 
-echo "Compiling the gamepad driver"
-rm gamepad 2>/dev/null
+function compile_and_run_i2c_scanner() {
+    echo "Compiling the I2C scanner"
+    rm scan 2>/dev/null
+    gcc -o scan scan.c
+    if [ $? -eq 0 ]; then
+        echo "Scanning every I2C bus to find the two modules"
+    else
+        echo "Failed to compile the I2C scanner"
+				echo "Make sure you copied the correct scan.c file"
+        exit 1
+    fi
+    ./scan
+}
 
-# Compile gamepad.c
-gcc -O3 -o gamepad gamepad.c
-if [ $? -eq 0 ]; then
-    echo "Compilation was successful. The file 'gamepad' was created."
-else
-    echo "Failed to compile the gamepad driver. Make sure you copied the correct gamepad.c file."
-    exit 1
-fi
+function get_and_set_i2c_bus() {
+    echo "---------------------------------------------"
+    echo "Using the above results as a guide, enter the number of the I2C bus"
+    echo "The default is 1, but it depends on your setup"
 
-echo "Disabling and removing existing gamepad service"
-systemctl stop gamepad 2>/dev/null
-systemctl disable gamepad 2>/dev/null
-echo "Do you want the driver to load at startup (Enter 1 for Yes or 2 for No)?"
-select yn in "Yes" "No"; do
-    case $yn in
-        Yes ) do_service; break;;
-        No ) break;
-    esac
-done
+    while true; do
+        # Ask the user to input a value from 0 to 22
+        read -p "Enter a number between 0 and 22: " input_value
+
+        # Check if the input_value is between 0 and 22
+        if [[ "$input_value" =~ ^[0-9]+$ ]] && [ "$input_value" -ge 0 ] && [ "$input_value" -le 22 ]; then
+            # Check for the existence of the line in gamepad.c
+            if grep -q "#define I2C_BUS \"/dev/i2c-" "gamepad.c"; then
+                # Use sed command to replace the line in gamepad.c
+                sed -i "s|#define I2C_BUS \"/dev/i2c-.*\"|#define I2C_BUS \"/dev/i2c-$input_value\"|g" "gamepad.c"
+                echo "The file gamepad.c has been updated successfully"
+                break
+            else
+                echo "The line '#define I2C_BUS \"/dev/i2c-' does not exist in gamepad.c. Make sure you copied the correct file."
+                break
+            fi
+        else
+            echo "Invalid input. The input should be a number from 0 to 22. Please try again."
+        fi
+    done
+}
+
+function install_service() {
+    echo "Copying new driver and service files"
+    cp -f gamepad /usr/bin/gamepad
+    cp -f gamepad.service /etc/systemd/system/gamepad.service
+    echo "Enabling gamepad service"
+    systemctl enable gamepad
+}
+
+function compile_gamepad_driver() {
+    echo "Compiling the gamepad driver"
+    rm gamepad 2>/dev/null
+
+    # Compile gamepad.c
+    gcc -O3 -o gamepad gamepad.c
+    if [ $? -eq 0 ]; then
+        echo "Gamepad was compiled successfuly"
+    else
+        echo "Failed to compile the gamepad driver. Make sure you copied the correct gamepad.c file."
+        exit 1
+    fi
+}
+
+function handle_existing_gamepad_service() {
+    echo "Disabling and removing existing gamepad service"
+    systemctl stop gamepad 2>/dev/null
+    systemctl disable gamepad 2>/dev/null
+}
+
+function prompt_for_autostart() {
+    echo "Do you want the driver to load at startup?"
+    PS3='Enter the number of your choice: '
+    options=("Yes" "No")
+    select yn in "${options[@]}"
+    do
+        case $yn in
+            "Yes")
+                install_service
+                break;;
+            "No")
+                break;;
+            *)
+                echo "Invalid option. Please enter the number corresponding to 'Yes' or 'No'.";;
+        esac
+    done
+}
+
+# Call functions in the right order
+check_root
+check_files_exist
+enable_i2c
+compile_and_run_i2c_scanner
+get_and_set_i2c_bus
+compile_gamepad_driver
+handle_existing_gamepad_service
+prompt_for_autostart
