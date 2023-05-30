@@ -143,8 +143,10 @@ function prompt_for_autostart() {
         case $yn in
             "Yes")
                 install_service
+                echo "A reboot is required"
                 break;;
             "No")
+                echo "You can run the driver with sudo ./gamepad &"
                 break;;
             *)
                 echo "Invalid option. Please enter the number corresponding to 'Yes' or 'No'.";;
