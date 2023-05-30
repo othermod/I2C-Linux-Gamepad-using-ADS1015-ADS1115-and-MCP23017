@@ -4,8 +4,6 @@
 
 This project allows you to create a gamepad using two I2C modules, suitable for a variety of games on the Raspberry Pi. The gamepad created can handle both analog and digital input, giving you a full-fledged gaming experience. This project is perfect for gaming enthusiasts looking for a fun and engaging DIY project, educators teaching technology or programming, and anyone interested in learning more about the interaction between hardware and software in game controllers.
 
-## Introduction
-
 The ADS1015 or ADS1115 handle analog input for the joystick, and the MCP23017 handles digital input for up to 16 buttons. By the end of this guide, you'll have a functional gamepad that you can use with your favorite games on your Raspberry Pi.
 
 ## Prerequisites
@@ -48,14 +46,47 @@ The wiring and setup of your Raspberry Pi for the gamepad is broken down into tw
 - GPB0 – GPB7 and GPA0 – GPA7 to your pushbuttons. The GPIOs are pulled up to 3.3v by the module, so you should connect each pushbutton to ground.
 
 ## Software Setup
+
 Before proceeding with the software installation, ensure that you have the necessary software installed on your Raspberry Pi, including the GCC Compiler.
 
 If you haven't installed GCC Compiler, you can do so with the following command:
+
 ```
 sudo apt-get install -y gcc
 ```
 
+### Using the Setup Script
+
 Installation is done by copying `setup.sh`, `gamepad.c`, `scan.c`, and `gamepad.service` to a folder on your Raspberry Pi (or other Linux device) and running `sudo bash setup.sh`. The driver will compile and I2C will get configured, and then the script will ask whether you want to load the driver at startup.
+
+### Manual Compilation and Running
+
+If you prefer to compile and run the driver manually without using the setup script, follow these steps:
+
+1. **Compile the Gamepad Driver**: Navigate to the directory containing the `gamepad.c` file and compile it using the GCC Compiler with the following command:
+
+    ```
+    gcc -o gamepad gamepad.c
+    ```
+
+    This will create an executable file named `gamepad`.
+
+2. **Run the Gamepad Driver**: You can run the gamepad driver with the following command:
+
+    ```
+    sudo ./gamepad
+    ```
+
+    Note: The driver needs to be run with root privileges to access the I2C interface.
+
+3. **Set the Gamepad Driver to Run at Startup**: If you want the gamepad driver to run automatically at startup, you can add it to the system's service. First, open the `gamepad.service` file and make sure the path to the `gamepad` executable is correct. Then, copy the `gamepad.service` file to the `/etc/systemd/system/` directory and enable it with the following commands:
+
+    ```
+    sudo cp gamepad.service /etc/systemd/system/
+    sudo systemctl enable gamepad.service
+    ```
+
+    This will set the gamepad driver to start automatically at boot.
 
 ## Usage Instructions
 
