@@ -97,7 +97,7 @@ function get_and_set_i2c_bus() {
                 break
             else
                 echo "The line '#define I2C_BUS \"/dev/i2c-' does not exist in gamepad.c. Make sure you copied the correct file."
-                break
+                exit 1
             fi
         else
             echo "Invalid input. The input should be a number from the available buses. Please try again."
