@@ -66,7 +66,7 @@ If you prefer to compile and run the driver manually without using the setup scr
 1. **Compile the Gamepad Driver**: Navigate to the directory containing the `gamepad.c` file and compile it using the GCC Compiler with the following command:
 
     ```
-    gcc -o gamepad gamepad.c
+    gcc -O3 -o gamepad gamepad.c
     ```
 
     This will create an executable file named `gamepad`.
@@ -84,6 +84,7 @@ If you prefer to compile and run the driver manually without using the setup scr
     ```
     sudo cp gamepad.service /etc/systemd/system/
     sudo systemctl enable gamepad.service
+    sudo systemctl start gamepad.service
     ```
 
     This will set the gamepad driver to start automatically at boot.
@@ -123,10 +124,8 @@ Other common issues and their solutions are:
 
 - **Gamepad not recognized**: Try rebooting your Raspberry Pi. If the problem persists, ensure that the driver is being loaded at startup.
 - **Buttons/joystick not responsive**: Double-check your wiring. If a button or joystick axis is not working, it may be due to a loose connection.
-- **Compilation errors during software setup**: Ensure that the GCC Compiler is correctly installed on your Raspberry Pi.
 
-Remember, you can use the I2C Tools for advanced troubleshooting (`sudo apt install -y i2c-tools`).
-
+You can also use the I2C Tools for advanced troubleshooting (`sudo apt install -y i2c-tools`).
 
 ## Contributing
 
